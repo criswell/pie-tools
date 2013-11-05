@@ -9,6 +9,7 @@ import sys
 import os.path
 import os
 import errno
+import time
 
 from drupal import Drupal
 
@@ -27,7 +28,7 @@ def mkdir_p(path):
     '''
     try:
         os.makedirs(path)
-    except OSError, exc:
+    except OSError as exc:
         if exc.errno == errno.EEXIST:
             pass
 
@@ -38,7 +39,14 @@ def make_page(e):
     header = []
     body = e.body
     header.append('title: %s' % e.title)
-    header.append('')
+    header.append('date: %s' % time.strftime(time_format, e.created))
+    if not e.terms is None:
+        header.append('tags: [ %s ]' % ', '.join(e.terms))
+
+    return "---\n" + "\n".join(header) + "\n---\n" + body
+
+
+time_format = '%Y-%m-%d %H:%M'
 
 for e in get_nodes:
-    #
+    print(make_page(e))

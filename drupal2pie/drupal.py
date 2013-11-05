@@ -99,7 +99,7 @@ class Drupal(object):
             nid = row[1]
             parent = row[2]
             weight = row[3]
-            if b.has_key(parent):
+            if parent in b:
                 b[parent][weight+15] = nid
                 self.lookup_books[nid] = parent
 
