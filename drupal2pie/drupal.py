@@ -77,7 +77,6 @@ class Drupal(object):
                 if e.nid in self._books:
                     e.children = []
                     for b in self._books[e.nid]:
-                        import pdb; pdb.set_trace()
                         e.children.append(self.get_node(b))
                 elif self.lookup_books.has_key(e.nid):
                     e.parent = self.get_node(self.lookup_books(e.nid))
