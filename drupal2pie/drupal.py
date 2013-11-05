@@ -44,14 +44,14 @@ class Drupal(object):
     def _gen_entry(self, row):
         c = self._conn.cursor()
         c2 = self._conn.cursor()
-        user = c.execute("select name from users where uid = %s" % row[4])
-        node = c.execute("select * from node_revisions where vid = %s" % row[1])
+        user = c.execute("select name from users where uid = %s" % row[4]).fetchall()
+        node = c.execute("select * from node_revisions where vid = %s" % row[1]).fetchall()[0]
         terms = []
         for elem in c2.execute("select * from term_node where nid=%s" % row[0]):
-            t = c.execute("select name from term_data where tid=%s" % elem[1])
+            t = c.execute("select name from term_data where tid=%s" % elem[1]).fetchone()[0]
             terms.append(t)
         url = None
-        if self._urls.has_key(row[0]):
+        if row[0] in self._urls:
             url = self._urls[row[0]]
         return Entry(row, user, node, terms, url)
 
@@ -59,7 +59,7 @@ class Drupal(object):
         """
         """
         c = self._conn.cursor()
-        r = c.execute("select * from node where nid=%s" % nid)
+        r = c.execute("select * from node where nid=%s" % nid).fetchall()
         if len(r) == 1:
             return self._gen_entry(r[0])
         else:
@@ -74,10 +74,11 @@ class Drupal(object):
         for row in c.execute("select * from node order by nid"):
             e = self._gen_entry(row)
             if e.type == 'book':
-                if self._books.has_key(e.nid):
+                if e.nid in self._books:
                     e.children = []
                     for b in self._books[e.nid]:
-                        e.children.append(self.get_node(n))
+                        import pdb; pdb.set_trace()
+                        e.children.append(self.get_node(b))
                 elif self.lookup_books.has_key(e.nid):
                     e.parent = self.get_node(self.lookup_books(e.nid))
                     i = self._books[e.parent].index(e.nid)
@@ -105,8 +106,6 @@ class Drupal(object):
 
         # Now, clean up the Nones
         for k, v in b.items():
-            for i in range(len(v) - 1):
-                if v[i] is None:
-                    v.pop(i)
+            v = filter(None, v)
 
         return b

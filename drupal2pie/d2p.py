@@ -39,14 +39,14 @@ def make_page(e):
     header = []
     body = e.body
     header.append('title: %s' % e.title)
-    header.append('date: %s' % time.strftime(time_format, e.created))
+    header.append('date: %s' % time.strftime(time_format, time.localtime(e.created)))
     if not e.terms is None:
+        #import pdb; pdb.set_trace()
         header.append('tags: [ %s ]' % ', '.join(e.terms))
 
     return "---\n" + "\n".join(header) + "\n---\n" + body
 
-
 time_format = '%Y-%m-%d %H:%M'
 
-for e in get_nodes:
+for e in d.get_nodes():
     print(make_page(e))
