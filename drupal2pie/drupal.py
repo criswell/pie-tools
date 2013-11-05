@@ -106,6 +106,6 @@ class Drupal(object):
 
         # Now, clean up the Nones
         for k, v in b.items():
-            v = filter(None, v)
+            b[k] = [i for i in filter(None, v)]
 
         return b
