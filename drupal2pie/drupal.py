@@ -55,6 +55,16 @@ class Drupal(object):
             url = self._urls[row[0]]
         return Entry(row, user, node, terms, url)
 
+    def get_node(self, nid):
+        """
+        """
+        c = self._conn.cursor()
+        r = c.execute("select * from node where nid=%s" % nid)
+        if len(r) == 1:
+            return self._gen_entry(r[0])
+        else:
+            return None
+
     def get_nodes(self):
         """
         """
@@ -65,14 +75,16 @@ class Drupal(object):
             e = self._gen_entry(row)
             if e.type == 'book':
                 if self._books.has_key(e.nid):
-                    e.children = self._books[e.nid]
+                    e.children = []
+                    for b in self._books[e.nid]:
+                        e.children.append(self.get_node(n))
                 elif self.lookup_books.has_key(e.nid):
-                    e.parent = self.lookup_books(e.nid)
+                    e.parent = self.get_node(self.lookup_books(e.nid))
                     i = self._books[e.parent].index(e.nid)
                     if i > 0:
-                        e.prev = self._books[e.parent][i-1]
+                        e.prev = self.get_node(self._books[e.parent][i-1])
                     if i < len(self._books[e.parent])-1:
-                        e.next = self._books[e.parent][i+1]
+                        e.next = self.get_node(self._books[e.parent][i+1])
             yield e
 
     def get_books(self):
