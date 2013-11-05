@@ -17,6 +17,10 @@ class Entry(object):
         self.format = node[8]
         self.terms = terms
         self.url = url
+        self.parent = None
+        self.child = None
+        self.prev = None
+        self.next = None
 
 class Drupal(object):
     """
@@ -34,6 +38,22 @@ class Drupal(object):
         for row in c.execute("select * from url_alias"):
             nid = int(row[1].split('/')[1])
             self._urls[nid] = row[2]
+        self.lookup_books = {}
+        self._books = self.get_books()
+
+    def _gen_entry(self, row):
+        c = self._conn.cursor()
+        c2 = self._conn.cursor()
+        user = c.execute("select name from users where uid = %s" % row[4])
+        node = c.execute("select * from node_revisions where vid = %s" % row[1])
+        terms = []
+        for elem in c2.execute("select * from term_node where nid=%s" % row[0]):
+            t = c.execute("select name from term_data where tid=%s" % elem[1])
+            terms.append(t)
+        url = None
+        if self._urls.has_key(row[0]):
+            url = self._urls[row[0]]
+        return Entry(row, user, node, terms, url)
 
     def get_nodes(self):
         """
@@ -42,14 +62,39 @@ class Drupal(object):
         c2 = self._conn.cursor()
         c3 = self._conn.cursor()
         for row in c.execute("select * from node order by nid"):
-            user = c2.execute("select name from users where uid = %s" % row[4])
-            node = c2.execute("select * from node_revisions where vid = %s" % row[1])
-            terms = []
-            for elem in c3.execute("select * from term_node where nid=%s" % row[0]):
-                t = c2.execute("select name from term_data where tid=%s" % elem[1])
-                terms.append(t)
-            url = None
-            if self._urls.has_key(row[0]):
-                url = self._urls[row[0]]
+            e = self._gen_entry(row)
+            if e.type == 'book':
+                if self._books.has_key(e.nid):
+                    e.children = self._books[e.nid]
+                elif self.lookup_books.has_key(e.nid):
+                    e.parent = self.lookup_books(e.nid)
+                    i = self._books[e.parent].index(e.nid)
+                    if i > 0:
+                        e.prev = self._books[e.parent][i-1]
+                    if i < len(self._books[e.parent])-1:
+                        e.next = self._books[e.parent][i+1]
+            yield e
 
-            yield Entry(row, user, node, terms, url)
+    def get_books(self):
+        c = self._conn.cursor()
+        b = {}
+        # first, get all the roots
+        for row in c.execute("select * from book where parent=0"):
+            nid = row[1]
+            b[nid] = [None for i in range(35)]
+        # Next, get all the children
+        for row in c.execute("select * from book where parent!=0"):
+            nid = row[1]
+            parent = row[2]
+            weight = row[3]
+            if b.has_key(parent):
+                b[parent][weight+15] = nid
+                self.lookup_books[nid] = parent
+
+        # Now, clean up the Nones
+        for k, v in b.items():
+            for i in range(len(v) - 1):
+                if v[i] is None:
+                    v.pop(i)
+
+        return b
