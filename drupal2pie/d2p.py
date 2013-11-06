@@ -10,7 +10,6 @@ import os.path
 import os
 import errno
 import time
-
 from drupal import Drupal
 
 if len(sys.argv) < 3:
@@ -49,4 +48,4 @@ def make_page(e):
 time_format = '%Y-%m-%d %H:%M'
 
 for e in d.get_nodes():
-    print(make_page(e))
+    print(make_page(e).encode('utf-8'))
