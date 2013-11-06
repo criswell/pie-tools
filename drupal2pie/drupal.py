@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+import itertools
 
 class Entry(object):
     def __init__(self, row, user, node, terms, url):
@@ -78,13 +79,13 @@ class Drupal(object):
                     e.children = []
                     for b in self._books[e.nid]:
                         e.children.append(self.get_node(b))
-                elif self.lookup_books.has_key(e.nid):
-                    e.parent = self.get_node(self.lookup_books(e.nid))
-                    i = self._books[e.parent].index(e.nid)
+                elif e.nid in self.lookup_books:
+                    e.parent = self.get_node(self.lookup_books[e.nid])
+                    i = self._books[e.parent.nid].index(e.nid)
                     if i > 0:
-                        e.prev = self.get_node(self._books[e.parent][i-1])
-                    if i < len(self._books[e.parent])-1:
-                        e.next = self.get_node(self._books[e.parent][i+1])
+                        e.prev = self.get_node(self._books[e.parent.nid][i-1])
+                    if i < len(self._books[e.parent.nid])-1:
+                        e.next = self.get_node(self._books[e.parent.nid][i+1])
             yield e
 
     def get_books(self):
@@ -93,18 +94,19 @@ class Drupal(object):
         # first, get all the roots
         for row in c.execute("select * from book where parent=0"):
             nid = row[1]
-            b[nid] = [None for i in range(35)]
+            b[nid] = [[] for i in range(35)]
         # Next, get all the children
         for row in c.execute("select * from book where parent!=0"):
             nid = row[1]
             parent = row[2]
             weight = row[3]
             if parent in b:
-                b[parent][weight+15] = nid
+                b[parent][weight+15].append(nid)
                 self.lookup_books[nid] = parent
 
         # Now, clean up the Nones
         for k, v in b.items():
-            b[k] = [i for i in filter(None, v)]
+            b[k] = [i for i in itertools.chain.from_iterable(v)]
 
+        #import pdb; pdb.set_trace()
         return b
