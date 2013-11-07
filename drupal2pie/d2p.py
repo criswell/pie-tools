@@ -43,11 +43,19 @@ def make_page(e):
     body = e.body
     header.append('title: %s' % e.title)
     header.append('date: %s' % time.strftime(time_format, time.localtime(e.created)))
-    if not e.terms is None:
+    if e.terms is not None:
         #import pdb; pdb.set_trace()
         header.append('tags: [ %s ]' % ', '.join(e.terms))
 
-    return "---\n" + "\n".join(header) + "\n---\n" + body
+    book_links = ''
+    if e.parent is not None:
+        book_links = "\n\n<hr>"
+        temp_url = "/node/%s_" % e.parent.nid
+        if e.parent.url is not None:
+            temp_url = e.parent.url
+        book_links = book_links + "<a href='%s'>%s</a>" % (temp_url, e.parent.title)
+
+    return "---\n" + "\n".join(header) + "\n---\n" + body + book_links
 
 for e in d.get_nodes():
     page = make_page(e) #.encode('utf-8')
