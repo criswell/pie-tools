@@ -34,6 +34,7 @@ class Drupal(object):
         """
         self._dbfn = dbfile
         self._conn = sqlite3.connect(dbfile)
+        self._conn.text_factory = lambda x : str(x, 'gbk', 'ignore')
         c = self._conn.cursor()
         self._urls = {}
         for row in c.execute("select * from url_alias"):

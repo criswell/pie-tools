@@ -51,7 +51,7 @@ def make_page(e):
 
 for e in d.get_nodes():
     page = make_page(e) #.encode('utf-8')
-    print("Processing: %s -> '%s'" % (e.nid, e.title))
+    print("Processing: %s -> '%s'" % (e.nid, e.title.encode('utf-8')))
     # First, the obvious ones... node/N
     node_path = "%s/%s.html" % (node_root, e.nid)
     with open(node_path, "w", encoding="utf-8") as f:
