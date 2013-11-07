@@ -50,7 +50,7 @@ def make_page(e):
     return "---\n" + "\n".join(header) + "\n---\n" + body
 
 for e in d.get_nodes():
-    page = make_page(e).encode('utf-8')
+    page = make_page(e) #.encode('utf-8')
     print("Processing: %s -> '%s'" % (e.nid, e.title))
     # First, the obvious ones... node/N
     node_path = "%s/%s.html" % (node_root, e.nid)
@@ -58,10 +58,10 @@ for e in d.get_nodes():
         f.write(page)
     # Next, if it has a pretty URL
     if e.url is not None:
-        url_path = "%s/_content/%s" % (pie_dir, e.url)
+        url_path = "%s/_content/pages/%s" % (pie_dir, e.url)
         (head, tail) = os.path.split(url_path)
         mkdir_p(head)
-        with open("%s.html", "w", encoding="utf-8") as f:
+        with open("%s.html" % url_path, "w", encoding="utf-8") as f:
             f.write(page)
     # Finally, if it was a blog post, put in posts
     if e.type == "blog":
