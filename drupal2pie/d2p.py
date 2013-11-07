@@ -31,8 +31,12 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST:
             pass
 
-mkdir_p("%s/_content/pages/node" % pie_dir)
-mkdir_p("%s/_content/posts" % pie_dir)
+node_root = "%s/_content/pages/node" % pie_dir
+post_root = "%s/_content/posts" % pie_dir
+
+mkdir_p(node_root)
+
+time_format = '%Y-%m-%d %H:%M'
 
 def make_page(e):
     header = []
@@ -45,7 +49,27 @@ def make_page(e):
 
     return "---\n" + "\n".join(header) + "\n---\n" + body
 
-time_format = '%Y-%m-%d %H:%M'
-
 for e in d.get_nodes():
-    print(make_page(e).encode('utf-8'))
+    page = make_page(e).encode('utf-8')
+    print("Processing: %s -> '%s'" % (e.nid, e.title))
+    # First, the obvious ones... node/N
+    node_path = "%s/%s.html" % (node_root, e.nid)
+    with open(node_path, "w", encoding="utf-8") as f:
+        f.write(page)
+    # Next, if it has a pretty URL
+    if e.url is not None:
+        url_path = "%s/_content/%s" % (pie_dir, e.url)
+        (head, tail) = os.path.split(url_path)
+        mkdir_p(head)
+        with open("%s.html", "w", encoding="utf-8") as f:
+            f.write(page)
+    # Finally, if it was a blog post, put in posts
+    if e.type == "blog":
+        year = time.strftime("%Y", time.localtime(e.created))
+        month = time.strftime("%m", time.localtime(e.created))
+        day = time.strftime("%d", time.localtime(e.created))
+        blog_root = "%s/%s/%s" % (post_root, year, month)
+        mkdir_p(blog_root)
+        blog_file = "%s/%s_post.html" % (blog_root, day)
+        with open(blog_file, "w", encoding="utf-8") as f:
+            f.write(page)
