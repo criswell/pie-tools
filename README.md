@@ -1,5 +1,5 @@
 pie-tools
 ---------
 
-Simple tools for managing/working-with a Piecrust-based site.
+Simple tools for managing/working-with various static site generators.
 
